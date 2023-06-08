@@ -1,8 +1,11 @@
 package br.com.fiap.pettech.dominio.produto.repository;
 
-import java.util.Optional;
+import br.com.fiap.pettech.dominio.produto.entitie.Produto;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface IProdutoRepository {
+import java.util.UUID;
 
-    Optional<>
+@Repository
+public interface IProdutoRepository extends JpaRepository<Produto, UUID> {
 }
