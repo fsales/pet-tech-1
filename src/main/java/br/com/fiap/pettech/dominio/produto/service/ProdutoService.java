@@ -2,6 +2,11 @@ package br.com.fiap.pettech.dominio.produto.service;
 
 import br.com.fiap.pettech.dominio.produto.entitie.Produto;
 import br.com.fiap.pettech.dominio.produto.repository.IProdutoRepository;
+import br.com.fiap.pettech.dominio.produto.service.exception.ControllerNotFoundException;
+import br.com.fiap.pettech.dominio.produto.service.exception.DataBaseException;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -23,8 +28,15 @@ public class ProdutoService {
         return lista;
     }
 
-    public Optional<Produto> findById(UUID id) {
-        return produtoRepository.findById(id);
+    public Produto findById(UUID id) {
+        var produto = produtoRepository
+                .findById(
+                        id
+                )
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Produto não encontrado")
+                );
+        return produto;
     }
 
     public Produto save(Produto produto) {
@@ -32,18 +44,32 @@ public class ProdutoService {
     }
 
     public Optional<Produto> update(UUID id, Produto produto) {
-        var produtoExistente = this.findById(id);
 
-//        if(produtoExistente.isPresent()){
-//            var produtoUpdate = produtoRepository.update(id, produto);
-//
-//            return Optional.of(produtoUpdate);
-//        }
+        try {
+            var produtoExistente = this.findById(id);
 
-        return Optional.empty();
+
+            var prod = produtoExistente
+                    .setDescricao(produto.descricao())
+                    .setUrlImagem(produto.urlImagem())
+                    .setPreco(produto.preco())
+                    .setNome(produto.nome());
+            var produtoUpdate = produtoRepository.save(prod);
+
+            return Optional.of(produtoUpdate);
+        } catch (EntityNotFoundException exception) {
+            throw new ControllerNotFoundException("Produto não encontrado" + " Id: " + id);
+        }
     }
 
     public void delete(UUID id) {
-//        produtoRepository.delete(id);
+        try {
+            produtoRepository.deleteById(id);
+        } catch (
+                EmptyResultDataAccessException |
+                DataIntegrityViolationException exception
+        ) {
+            throw new DataBaseException("Erro ao remover produto. Id: " + id);
+        }
     }
 }
