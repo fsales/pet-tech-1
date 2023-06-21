@@ -1,5 +1,6 @@
 package br.com.fiap.pettech.dominio.produto.service;
 
+import br.com.fiap.pettech.dominio.produto.dto.ProdutoDTO;
 import br.com.fiap.pettech.dominio.produto.entitie.Produto;
 import br.com.fiap.pettech.dominio.produto.repository.IProdutoRepository;
 import br.com.fiap.pettech.dominio.produto.service.exception.ControllerNotFoundException;
@@ -7,9 +8,10 @@ import br.com.fiap.pettech.dominio.produto.service.exception.DataBaseException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,8 +25,13 @@ public class ProdutoService {
         this.produtoRepository = produtoRepository;
     }
 
-    public Collection<Produto> findAll() {
-        var lista = produtoRepository.findAll();
+    public Page<Produto> findAll(
+            PageRequest pageRequest
+    ) {
+        var lista = produtoRepository.findAll(
+                pageRequest
+        );
+
         return lista;
     }
 
@@ -39,11 +46,19 @@ public class ProdutoService {
         return produto;
     }
 
-    public Produto save(Produto produto) {
-        return produtoRepository.save(produto);
+    public Produto save(ProdutoDTO produto) {
+
+        Produto entity = new Produto()
+                .setNome(produto.nome())
+                .setDescricao(produto.descricao())
+                .setUrlImagem(produto.urlImagem())
+                .setPreco(produto.preco());
+
+
+        return produtoRepository.save(entity);
     }
 
-    public Optional<Produto> update(UUID id, Produto produto) {
+    public Optional<Produto> update(UUID id, ProdutoDTO produto) {
 
         try {
             var produtoExistente = this.findById(id);
